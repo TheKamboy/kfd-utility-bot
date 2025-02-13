@@ -6,12 +6,28 @@ use serenity::prelude::*;
 use shuttle_runtime::SecretStore;
 use tracing::{error, info};
 
+// Bot Settings
+const COMMAND_PREFIX: &str = ";";
+
+// Channels
+const LOG_CHANNEL: i64 = 1314766735030747218;
+
+fn check_command(msg: &Message, command: &str) -> bool {
+    let mut full_command = "".to_owned();
+    full_command.push_str(COMMAND_PREFIX);
+    full_command.push_str(command);
+    if msg.content.to_lowercase() == full_command {
+        return true;
+    }
+    return false;
+}
+
 struct Bot;
 
 #[async_trait]
 impl EventHandler for Bot {
     async fn message(&self, ctx: Context, msg: Message) {
-        if msg.content == "!hello" {
+        if check_command(&msg, "hello") {
             if let Err(e) = msg.channel_id.say(&ctx.http, "world!").await {
                 error!("Error sending message: {:?}", e);
             }
