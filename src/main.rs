@@ -36,7 +36,7 @@ const COMMAND_PREFIX: &str = ";";
 const VERSION: &str = "v0.0.5-alpha";
 
 /// Blocks commands from being sent unless it is sent from the owners ( default: false )
-const DEVELOPMENT: bool = true;
+const DEVELOPMENT: bool = false;
 
 // Channels
 const LOG_CHANNEL: u64 = 1314766735030747218;
