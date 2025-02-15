@@ -1,144 +1,209 @@
 use anyhow::Context as _;
-use serenity::async_trait;
-use serenity::builder::CreateMessage;
-use serenity::model::channel::Message;
-use serenity::model::gateway::Ready;
+use poise;
+use poise::serenity_prelude as serenity;
+use poise::serenity_prelude::ActivityData;
+use rand::Rng;
+use serenity::all::CreateMessage;
+use serenity::model::id::UserId;
 use serenity::prelude::*;
-use serenity::utils::MessageBuilder;
 use shuttle_runtime::SecretStore;
-use tracing::{error, info};
+use std::ptr::null;
 
-/* TODOs
+/* Projects
 DONEPROJ: Basics
     DONE: Add Help Command
     DONE: Add Versions
     DONE: Add ChangeLog
-PROJ: Moderation Commands
+PROJ: v0.0.5-alpha milestone
     TODO: Verbal Warning Command
-CANNED: Updates
-    TODO: Utility Bot Changelog as a channel
-    TODO: Update Changelog command
+    DONE: Finish porting commands to poise
  */
 
+/* Category's:
+, category = "Utility"
+, category = "Info"
+, category = "Moderation"
+*/
+
 // Bot Settings
+/// The name you want to give the bot ( default: KamFurDev's Utility Bot )
 const NAME: &str = "KamFurDev's Utility Bot";
+
+/// The prefix for text commands ( default: ; )
 const COMMAND_PREFIX: &str = ";";
-const VERSION: &str = "v0.0.2-alpha";
+
+/// The current version of the bot
+const VERSION: &str = "v0.0.5-alpha";
+
+/// Blocks commands from being sent unless it is sent from the owners ( default: false )
+const DEVELOPMENT: bool = true;
 
 // Channels
-const LOG_CHANNEL: i64 = 1314766735030747218;
+const LOG_CHANNEL: u64 = 1314766735030747218;
 
 // Roles
-const OWNER_ROLES: [i64; 2] = [1314451651704393770, 1314451866289176616]; // owner and co-owner
-const ADMIN_ROLE: i64 = 1314453508409262130;
-const HIGHER_MOD_ROLE: i64 = 1320629413154525265; // higher ranked mod
-const MOD_ROLE: i64 = 1314454674111467602;
-const TRIAL_MOD_ROLE: i64 = 1314454804369510421;
-
-// Help Command
-const HELP_COMMANDS: &str = "## Basic Commands
-- `help`: shows this message
-- `version`: gives the version of the bot
-- `changelog`: sends the changelog to your dms
-- `hello`: responds with \"world!\"
-## Moderation Commands
-- `/warn verbal`: gives a user a verbal warning";
+const OWNER_ROLES: [u64; 2] = [1314451651704393770, 1314451866289176616]; // owner and co-owner
+const ADMIN_ROLE: u64 = 1314453508409262130;
+const HIGHER_MOD_ROLE: u64 = 1320629413154525265; // higher ranked mod
+const MOD_ROLE: u64 = 1314454674111467602;
+const TRIAL_MOD_ROLE: u64 = 1314454804369510421;
 
 // Changelog
 const CHANGELOG_MSG: &str = "# Changelog
+## v0.0.5-alpha
+- moved commands to poise framework (so you can have slash commands as well)
+- verbal warning command
 ## v0.0.1-alpha
 - default serenity hello world command added
 - help message added
 - version message added
 - changelog added";
 
-fn check_command(msg: &Message, command: &str) -> bool {
-    let mut full_command = "".to_owned();
-    full_command.push_str(COMMAND_PREFIX);
-    full_command.push_str(command);
-    if msg.content.to_lowercase() == full_command {
-        return true;
-    }
-    return false;
+// fuckin hell i gotta do a rewrite of all my shit
+struct Data {} // User data, which is stored and accessible in all command invocations
+type Error = Box<dyn std::error::Error + Send + Sync>;
+type Context<'a> = poise::Context<'a, Data, Error>;
+
+/// Displays your or another user's account creation date
+#[poise::command(slash_command, prefix_command, category = "Utility")]
+async fn account_age(
+    ctx: Context<'_>,
+    #[description = "Selected user"] user: Option<serenity::User>,
+) -> Result<(), Error> {
+    let u = user.as_ref().unwrap_or_else(|| ctx.author());
+    let response = format!("{}'s account was created at {}", u.name, u.created_at());
+    ctx.say(response).await?;
+    Ok(())
 }
 
-fn check_command_start(msg: &Message, command: &str) -> bool {
-    let mut full_command = "".to_owned();
-    full_command.push_str(COMMAND_PREFIX);
-    full_command.push_str(command);
-    full_command.push_str(" ");
-    if msg.content.to_lowercase().contains(full_command.as_str()) {
-        return true;
+/// Sends a verbal warning to the user specified, with a reason
+#[poise::command(slash_command, prefix_command, category = "Moderation")]
+async fn verbal_warn(
+    ctx: Context<'_>,
+    #[description = "User"] user: serenity::User,
+    #[description = "Reason"] reason: String,
+) -> Result<(), Error> {
+    if !check_for_roles(
+        &ctx,
+        [
+            OWNER_ROLES[0],
+            OWNER_ROLES[1],
+            ADMIN_ROLE,
+            HIGHER_MOD_ROLE,
+            MOD_ROLE,
+            TRIAL_MOD_ROLE,
+        ]
+        .as_ref(),
+    )
+    .await
+    {
+        ctx.reply(random_not_allowed_message()).await?;
+        return Ok(());
     }
-    return false;
+
+    let u = user;
+    let mut umention = "".to_owned();
+    umention.push_str("<@");
+    umention.push_str(&u.id.to_string());
+    umention.push_str(">");
+    let moderatorname = &ctx.author().name;
+    let msgreason = reason;
+
+    let logchannel = serenity::ChannelId::new(LOG_CHANNEL);
+
+    logchannel
+        .say(
+            ctx.http(),
+            format!("Sent a verbal warning to {umention}.\nModerator: {moderatorname}\nReason: {msgreason}"),
+        )
+        .await?;
+    u.dm(
+        ctx.http(),
+        CreateMessage::new().content(format!(
+            "{umention}\nThis is a verbal warning! Continued action with have consequences!\nModerator: {moderatorname}\nReason: {msgreason}"
+        )),
+    )
+        .await?;
+
+    ctx.reply("Done!").await?;
+    Ok(())
 }
 
-/// mode: 0 = the regular help message, 1 = just the version
-async fn send_help_message(ctx: &Context, msg: &Message, mode: i32) {
-    if mode == 0 {
-        let response = MessageBuilder::new()
-            .push_bold_safe(NAME)
-            .push(" ")
-            .push_bold_safe(VERSION)
-            .push("\n")
-            .push("Prefix: ")
-            .push_mono_safe(COMMAND_PREFIX)
-            .push("\n")
-            .push("# Commands\n")
-            .push(HELP_COMMANDS)
-            .build();
-
-        let finish = CreateMessage::new().content(response);
-
-        if let Err(e) = msg.author.dm(&ctx.http, finish).await {
-            error!("Error sending message: {:?}", e);
-        }
-    } else if mode == 1 {
-        let response = MessageBuilder::new()
-            .push_bold_safe(NAME)
-            .push(" ")
-            .push_bold_safe(VERSION)
-            .build();
-
-        if let Err(e) = msg.channel_id.say(&ctx.http, &response).await {
-            error!("Error sending message: {:?}", e);
-        }
-    }
+/// Sends the changelog to your DMs
+#[poise::command(slash_command, prefix_command, category = "Info")]
+async fn changelog(ctx: Context<'_>) -> Result<(), Error> {
+    let message = CreateMessage::new().content(CHANGELOG_MSG);
+    ctx.reply("I sent the changelog to your DMs.").await?;
+    ctx.author().dm(ctx.http(), message).await?;
+    Ok(())
 }
 
-struct Bot;
+/// Displays the current version of the bot
+#[poise::command(slash_command, prefix_command, category = "Info")]
+async fn version(ctx: Context<'_>) -> Result<(), Error> {
+    ctx.say(format!("{NAME} {VERSION}").as_str()).await?;
+    Ok(())
+}
 
-#[async_trait]
-impl EventHandler for Bot {
-    async fn message(&self, ctx: Context, msg: Message) {
-        if msg.author.bot {
-            return;
+/// Shows commands you can run using the bot
+#[poise::command(slash_command, track_edits, prefix_command, category = "Info")]
+pub async fn help(
+    ctx: Context<'_>,
+    #[description = "Specific command to show help about"]
+    #[autocomplete = "poise::builtins::autocomplete_command"]
+    command: Option<String>,
+) -> Result<(), Error> {
+    poise::builtins::help(
+        ctx,
+        command.as_deref(),
+        poise::builtins::HelpConfiguration {
+            ephemeral: true,
+            extra_text_at_bottom: format!("Prefix = {COMMAND_PREFIX}\n{NAME} {VERSION}").as_str(),
+            ..Default::default()
+        },
+    )
+    .await?;
+    Ok(())
+}
+
+// TODO
+fn random_not_allowed_message() -> String {
+    let mut message = "You do not have permission to do that.".to_string();
+    let num = rand::rng().random_range(0..100);
+
+    return message;
+}
+
+async fn on_error(error: poise::FrameworkError<'_, Data, Error>) {
+    // This is our custom error handler
+    // They are many errors that can occur, so we only handle the ones we want to customize
+    // and forward the rest to the default handler
+    match error {
+        poise::FrameworkError::Setup { error, .. } => panic!("Failed to start bot: {:?}", error),
+        poise::FrameworkError::Command { error, ctx, .. } => {
+            println!("Error in command `{}`: {:?}", ctx.command().name, error,);
         }
-
-        // basic shit
-        if check_command(&msg, "hello") {
-            if let Err(e) = msg.channel_id.say(&ctx.http, "world!").await {
-                error!("Error sending message: {:?}", e);
+        error => {
+            if let Err(e) = poise::builtins::on_error(error).await {
+                println!("Error while handling error: {}", e)
             }
-        } else if check_command(&msg, "help") {
-            send_help_message(&ctx, &msg, 0).await;
-        } else if check_command(&msg, "version") {
-            send_help_message(&ctx, &msg, 1).await;
-        } else if check_command(&msg, "changelog") {
-            let response = CreateMessage::new().content(CHANGELOG_MSG);
-
-            if let Err(e) = msg.author.dm(&ctx.http, response).await {
-                error!("Error sending message: {:?}", e);
-            }
         }
+    }
+}
 
-        // mod commands
-
+async fn check_for_roles(ctx: &Context<'_>, roles: &[u64]) -> bool {
+    for role in roles {
+        if ctx
+            .author()
+            .has_role(ctx.http(), ctx.guild_id().unwrap(), role.to_owned())
+            .await
+            .unwrap()
+        {
+            return true;
+        }
     }
 
-    async fn ready(&self, _: Context, ready: Ready) {
-        info!("{} is connected!", ready.user.name);
-    }
+    return false;
 }
 
 #[shuttle_runtime::main]
@@ -153,8 +218,84 @@ async fn serenity(
     // Set gateway intents, which decides what events the bot will be notified about
     let intents = GatewayIntents::GUILD_MESSAGES | GatewayIntents::MESSAGE_CONTENT;
 
+    let framework = poise::Framework::builder()
+        .options(poise::FrameworkOptions {
+            commands: vec![help(), version(), changelog(), verbal_warn(), account_age()],
+            prefix_options: poise::PrefixFrameworkOptions {
+                prefix: Some(COMMAND_PREFIX.to_string()),
+                ..Default::default()
+            },
+            // The global error handler for all error cases that may occur
+            on_error: |error| Box::pin(on_error(error)),
+            command_check: Some(|ctx| {
+                Box::pin(async move {
+                    let mut check = false;
+                    if DEVELOPMENT {
+                        for role in OWNER_ROLES {
+                            if ctx
+                                .author()
+                                .has_role(ctx.http(), ctx.guild_id().unwrap(), role)
+                                .await?
+                            {
+                                check = true;
+                                break;
+                            }
+                        }
+                    } else {
+                        check = true;
+                    }
+
+                    if !check {
+                        ctx.say("The bot is currently in development mode (which means only the server owner(s) can use the bot), please try again later.")
+                            .await?;
+                        return Ok(false);
+                    }
+                    Ok(true)
+                })
+            }),
+            // This code is run before every command
+            pre_command: |ctx| {
+                Box::pin(async move {
+                    println!("Executing command {}...", ctx.command().qualified_name);
+                })
+            },
+            // This code is run after a command if it was successful (returned Ok)
+            post_command: |ctx| {
+                Box::pin(async move {
+                    println!("Executed command {}!", ctx.command().qualified_name);
+                })
+            },
+            event_handler: |_ctx, event, _framework, _data| {
+                Box::pin(async move {
+                    println!(
+                        "Got an event in event handler: {:?}",
+                        event.snake_case_name()
+                    );
+                    Ok(())
+                })
+            },
+            ..Default::default()
+        })
+        .setup(|ctx, _ready, framework| {
+            Box::pin(async move {
+                println!("Logged in as {}", _ready.user.name);
+                poise::builtins::register_globally(ctx, &framework.options().commands).await?;
+                Ok(Data {})
+            })
+        })
+        .build();
+
+    let mut activity = "".to_owned();
+    activity.push_str(COMMAND_PREFIX);
+    activity.push_str("help");
+
+    if DEVELOPMENT {
+        activity.push_str(" | DEV MODE");
+    }
+
     let client = Client::builder(&token, intents)
-        .event_handler(Bot)
+        .framework(framework)
+        .activity(ActivityData::custom(activity))
         .await
         .expect("Err creating client");
 
