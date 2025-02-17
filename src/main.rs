@@ -1,22 +1,26 @@
 use anyhow::Context as _;
 use poise;
+use poise::futures_util::TryFutureExt;
 use poise::serenity_prelude as serenity;
 use poise::serenity_prelude::ActivityData;
 use rand::Rng;
-use serenity::all::CreateMessage;
+use ::serenity::all::{EmojiIdentifier, Reaction, ReactionType};
+use serenity::all::{CreateMessage, User};
 use serenity::model::id::UserId;
 use serenity::prelude::*;
+use serenity::utils::MessageBuilder;
 use shuttle_runtime::SecretStore;
 use std::ptr::null;
-
 /* Projects
 DONEPROJ: Basics
     DONE: Add Help Command
     DONE: Add Versions
     DONE: Add ChangeLog
-PROJ: v0.0.5-alpha milestone
-    TODO: Verbal Warning Command
+DONEPROJ: v0.0.5-alpha milestone
+    DONE: Verbal Warning Command
     DONE: Finish porting commands to poise
+PROJ: v0.0.6a-alpha
+    TODO: Add poll lock
  */
 
 /* Category's:
@@ -26,16 +30,16 @@ PROJ: v0.0.5-alpha milestone
 */
 
 // Bot Settings
-/// The name you want to give the bot ( default: KamFurDev's Utility Bot )
+/// The name you want to give the bot. ( default: KamFurDev's Utility Bot )
 const NAME: &str = "KamFurDev's Utility Bot";
 
-/// The prefix for text commands ( default: ; )
+/// The prefix for text commands. ( default: ; )
 const COMMAND_PREFIX: &str = ";";
 
-/// The current version of the bot
-const VERSION: &str = "v0.0.5-alpha";
+/// The current version of the bot.
+const VERSION: &str = "v0.0.6-alpha";
 
-/// Blocks commands from being sent unless it is sent from the owners ( default: false )
+/// Blocks commands from being sent unless it is sent from the owners. ( default: false )
 const DEVELOPMENT: bool = false;
 
 // Channels
@@ -48,8 +52,16 @@ const HIGHER_MOD_ROLE: u64 = 1320629413154525265; // higher ranked mod
 const MOD_ROLE: u64 = 1314454674111467602;
 const TRIAL_MOD_ROLE: u64 = 1314454804369510421;
 
+// Command Locks
+// / Locks the `/poll` command for any role not in the list. If empty, any user can use it.
+
 // Changelog
 const CHANGELOG_MSG: &str = "# Changelog
+## v0.0.6-alpha
+- added the `/poll` command, which allows you to make polls (obviously)
+- added periods to all docstrings (so command descriptions have proper punctuation)
+## v0.0.5a-alpha
+- fixed oversight where moderators could verbal warn moderators, and higher.
 ## v0.0.5-alpha
 - moved commands to poise framework (so you can have slash commands as well)
 - verbal warning command
@@ -64,7 +76,95 @@ struct Data {} // User data, which is stored and accessible in all command invoc
 type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
 
-/// Displays your or another user's account creation date
+/// Creates a poll for users to vote on.
+#[poise::command(slash_command, prefix_command, category = "Utility")]
+async fn poll(
+    ctx: Context<'_>,
+    #[description = "Title"] title: String,
+    #[description = "Option 1"] option1: String,
+    #[description = "Option 2"] option2: String,
+    #[description = "Option 3"] option3: Option<String>,
+    #[description = "Option 4"] option4: Option<String>,
+    #[description = "Option 5"] option5: Option<String>,
+    #[description = "Option 6"] option6: Option<String>,
+    #[description = "Option 7"] option7: Option<String>,
+    #[description = "Option 8"] option8: Option<String>,
+    #[description = "Option 9"] option9: Option<String>,
+    #[description = "Option 10"] option10: Option<String>,
+) -> Result<(), Error> {
+    let emptystring: &String = &String::new();
+    let o3 = option3.as_ref().unwrap_or_else(|| emptystring);
+    let o4 = option4.as_ref().unwrap_or_else(|| emptystring);
+    let o5 = option5.as_ref().unwrap_or_else(|| emptystring);
+    let o6 = option6.as_ref().unwrap_or_else(|| emptystring);
+    let o7 = option7.as_ref().unwrap_or_else(|| emptystring);
+    let o8 = option8.as_ref().unwrap_or_else(|| emptystring);
+    let o9 = option9.as_ref().unwrap_or_else(|| emptystring);
+    let o0 = option10.as_ref().unwrap_or_else(|| emptystring);
+
+    let authorname = &ctx.author().id.to_string();
+
+    let mut message = format!("# {title}\n> Asked by: <@{authorname}>\n\n");
+    message = format!("{message}:one: {option1}\n:two: {option2}");
+
+    if o3 != "" {
+        message = format!("{message}\n:three: {o3}");
+    }
+    if o4 != "" {
+        message = format!("{message}\n:four: {o4}");
+    }
+    if o5 != "" {
+        message = format!("{message}\n:five: {o5}");
+    }
+    if o6 != "" {
+        message = format!("{message}\n:six: {o6}");
+    }
+    if o7 != "" {
+        message = format!("{message}\n:seven: {o7}");
+    }
+    if o8 != "" {
+        message = format!("{message}\n:eight: {o8}");
+    }
+    if o9 != "" {
+        message = format!("{message}\n:nine: {o9}");
+    }
+    if o0 != "" {
+        message = format!("{message}\n:keycap_ten: {o0}");
+    }
+
+    let msg = ctx.say(message).await?.into_message().await?;
+    msg.react(ctx.http(), ReactionType::Unicode("1️⃣".to_string())).await?;
+    msg.react(ctx.http(), ReactionType::Unicode("2️⃣".to_string())).await?;
+
+    if o3 != "" {
+        msg.react(ctx.http(), ReactionType::Unicode("3️⃣".to_string())).await?;
+    }
+    if o4 != "" {
+        msg.react(ctx.http(), ReactionType::Unicode("4️⃣".to_string())).await?;
+    }
+    if o5 != "" {
+        msg.react(ctx.http(), ReactionType::Unicode("5️⃣".to_string())).await?;
+    }
+    if o6 != "" {
+        msg.react(ctx.http(), ReactionType::Unicode("6️⃣".to_string())).await?;
+    }
+    if o7 != "" {
+        msg.react(ctx.http(), ReactionType::Unicode("7️⃣".to_string())).await?;
+    }
+    if o8 != "" {
+        msg.react(ctx.http(), ReactionType::Unicode("8️⃣".to_string())).await?;
+    }
+    if o9 != "" {
+        msg.react(ctx.http(), ReactionType::Unicode("9️⃣".to_string())).await?;
+    }
+    if o0 != "" {
+        msg.react(ctx.http(), ReactionType::Unicode("🔟".to_string())).await?;
+    }
+
+    Ok(())
+}
+
+/// Displays your or another user's account creation date.
 #[poise::command(slash_command, prefix_command, category = "Utility")]
 async fn account_age(
     ctx: Context<'_>,
@@ -76,7 +176,7 @@ async fn account_age(
     Ok(())
 }
 
-/// Sends a verbal warning to the user specified, with a reason
+/// Sends a verbal warning to the user specified, with a reason.
 #[poise::command(slash_command, prefix_command, category = "Moderation")]
 async fn verbal_warn(
     ctx: Context<'_>,
@@ -85,6 +185,7 @@ async fn verbal_warn(
 ) -> Result<(), Error> {
     if !check_for_roles(
         &ctx,
+        &ctx.author(),
         [
             OWNER_ROLES[0],
             OWNER_ROLES[1],
@@ -102,6 +203,26 @@ async fn verbal_warn(
     }
 
     let u = user;
+
+    if check_for_roles(
+        &ctx,
+        &u,
+        [
+            OWNER_ROLES[0],
+            OWNER_ROLES[1],
+            ADMIN_ROLE,
+            HIGHER_MOD_ROLE,
+            MOD_ROLE,
+            TRIAL_MOD_ROLE,
+        ]
+        .as_ref(),
+    )
+    .await
+    {
+        ctx.reply("User is a moderator or higher.").await?;
+        return Ok(());
+    }
+
     let mut umention = "".to_owned();
     umention.push_str("<@");
     umention.push_str(&u.id.to_string());
@@ -129,7 +250,7 @@ async fn verbal_warn(
     Ok(())
 }
 
-/// Sends the changelog to your DMs
+/// Sends the changelog to your DMs.
 #[poise::command(slash_command, prefix_command, category = "Info")]
 async fn changelog(ctx: Context<'_>) -> Result<(), Error> {
     let message = CreateMessage::new().content(CHANGELOG_MSG);
@@ -138,14 +259,14 @@ async fn changelog(ctx: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
-/// Displays the current version of the bot
+/// Displays the current version of the bot.
 #[poise::command(slash_command, prefix_command, category = "Info")]
 async fn version(ctx: Context<'_>) -> Result<(), Error> {
     ctx.say(format!("{NAME} {VERSION}").as_str()).await?;
     Ok(())
 }
 
-/// Shows commands you can run using the bot
+/// Shows commands you can run using the bot.
 #[poise::command(slash_command, track_edits, prefix_command, category = "Info")]
 pub async fn help(
     ctx: Context<'_>,
@@ -191,10 +312,9 @@ async fn on_error(error: poise::FrameworkError<'_, Data, Error>) {
     }
 }
 
-async fn check_for_roles(ctx: &Context<'_>, roles: &[u64]) -> bool {
+async fn check_for_roles(ctx: &Context<'_>, user: &User, roles: &[u64]) -> bool {
     for role in roles {
-        if ctx
-            .author()
+        if user
             .has_role(ctx.http(), ctx.guild_id().unwrap(), role.to_owned())
             .await
             .unwrap()
@@ -220,7 +340,17 @@ async fn serenity(
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
-            commands: vec![help(), version(), changelog(), verbal_warn(), account_age()],
+            commands: vec![
+                // info
+                help(),
+                version(),
+                changelog(),
+                // moderation
+                verbal_warn(),
+                // utility
+                account_age(),
+                poll()
+            ],
             prefix_options: poise::PrefixFrameworkOptions {
                 prefix: Some(COMMAND_PREFIX.to_string()),
                 ..Default::default()
