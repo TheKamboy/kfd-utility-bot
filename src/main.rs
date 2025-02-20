@@ -1,10 +1,10 @@
+use ::serenity::all::{EmojiIdentifier, Reaction, ReactionType};
 use anyhow::Context as _;
 use poise;
 use poise::futures_util::TryFutureExt;
 use poise::serenity_prelude as serenity;
 use poise::serenity_prelude::ActivityData;
 use rand::Rng;
-use ::serenity::all::{EmojiIdentifier, Reaction, ReactionType};
 use serenity::all::{CreateMessage, User};
 use serenity::model::id::UserId;
 use serenity::prelude::*;
@@ -133,32 +133,42 @@ async fn poll(
     }
 
     let msg = ctx.say(message).await?.into_message().await?;
-    msg.react(ctx.http(), ReactionType::Unicode("1️⃣".to_string())).await?;
-    msg.react(ctx.http(), ReactionType::Unicode("2️⃣".to_string())).await?;
+    msg.react(ctx.http(), ReactionType::Unicode("1️⃣".to_string()))
+        .await?;
+    msg.react(ctx.http(), ReactionType::Unicode("2️⃣".to_string()))
+        .await?;
 
     if o3 != "" {
-        msg.react(ctx.http(), ReactionType::Unicode("3️⃣".to_string())).await?;
+        msg.react(ctx.http(), ReactionType::Unicode("3️⃣".to_string()))
+            .await?;
     }
     if o4 != "" {
-        msg.react(ctx.http(), ReactionType::Unicode("4️⃣".to_string())).await?;
+        msg.react(ctx.http(), ReactionType::Unicode("4️⃣".to_string()))
+            .await?;
     }
     if o5 != "" {
-        msg.react(ctx.http(), ReactionType::Unicode("5️⃣".to_string())).await?;
+        msg.react(ctx.http(), ReactionType::Unicode("5️⃣".to_string()))
+            .await?;
     }
     if o6 != "" {
-        msg.react(ctx.http(), ReactionType::Unicode("6️⃣".to_string())).await?;
+        msg.react(ctx.http(), ReactionType::Unicode("6️⃣".to_string()))
+            .await?;
     }
     if o7 != "" {
-        msg.react(ctx.http(), ReactionType::Unicode("7️⃣".to_string())).await?;
+        msg.react(ctx.http(), ReactionType::Unicode("7️⃣".to_string()))
+            .await?;
     }
     if o8 != "" {
-        msg.react(ctx.http(), ReactionType::Unicode("8️⃣".to_string())).await?;
+        msg.react(ctx.http(), ReactionType::Unicode("8️⃣".to_string()))
+            .await?;
     }
     if o9 != "" {
-        msg.react(ctx.http(), ReactionType::Unicode("9️⃣".to_string())).await?;
+        msg.react(ctx.http(), ReactionType::Unicode("9️⃣".to_string()))
+            .await?;
     }
     if o0 != "" {
-        msg.react(ctx.http(), ReactionType::Unicode("🔟".to_string())).await?;
+        msg.react(ctx.http(), ReactionType::Unicode("🔟".to_string()))
+            .await?;
     }
 
     Ok(())
@@ -218,6 +228,12 @@ async fn verbal_warn(
         .as_ref(),
     )
     .await
+        && !check_for_roles(
+            &ctx,
+            ctx.author(),
+            [OWNER_ROLES[0], OWNER_ROLES[1]].as_ref(),
+        )
+        .await
     {
         ctx.reply("User is a moderator or higher.").await?;
         return Ok(());
