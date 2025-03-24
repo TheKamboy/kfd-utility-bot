@@ -12,15 +12,10 @@ use serenity::utils::MessageBuilder;
 use shuttle_runtime::SecretStore;
 use std::ptr::null;
 /* Projects
-DONEPROJ: Basics
-    DONE: Add Help Command
-    DONE: Add Versions
-    DONE: Add ChangeLog
-DONEPROJ: v0.0.5-alpha milestone
-    DONE: Verbal Warning Command
-    DONE: Finish porting commands to poise
+BACKLOG:
+    !: Add poll lock
 PROJ: v0.0.6a-alpha
-    TODO: Add poll lock
+    TODO: Add random warn messages
  */
 
 /* Category's:
@@ -37,7 +32,7 @@ const NAME: &str = "KamFurDev's Utility Bot";
 const COMMAND_PREFIX: &str = ";";
 
 /// The current version of the bot.
-const VERSION: &str = "v0.0.6-alpha";
+const VERSION: &str = "v0.0.6a-alpha";
 
 /// Blocks commands from being sent unless it is sent from the owners. ( default: false )
 const DEVELOPMENT: bool = false;
@@ -53,7 +48,7 @@ const MOD_ROLE: u64 = 1314454674111467602;
 const TRIAL_MOD_ROLE: u64 = 1314454804369510421;
 
 // Random Messages
-const NOT_ALLOWED_MESSAGES: [&'static str; 5] = ["1", "2", "3", "4", "5"];
+const NOT_ALLOWED_MESSAGES: [&'static str; 5] = ["This is not a fucking painting!!! (unallowed action)", "You...shall not...pass! (unallowed action)", "My programmer doesn't want you doing this, so go away until you are allowed to do so!", "No.", "I'm sorry Dave, I'm afraid I can't do that."];
 
 // Command Locks
 // / Locks the `/poll` command for any role not in the list. If empty, any user can use it.
@@ -322,7 +317,7 @@ pub async fn help(
 // TODO
 fn random_not_allowed_message() -> String {
     let mut message = String::new();
-    let num = rand::rng().random_range(0..NOT_ALLOWED_MESSAGES.len() + 1);
+    let num = rand::rng().random_range(0..NOT_ALLOWED_MESSAGES.len());
 
     message = NOT_ALLOWED_MESSAGES[num].to_string();
 
