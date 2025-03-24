@@ -52,24 +52,15 @@ const HIGHER_MOD_ROLE: u64 = 1320629413154525265; // higher ranked mod
 const MOD_ROLE: u64 = 1314454674111467602;
 const TRIAL_MOD_ROLE: u64 = 1314454804369510421;
 
+// Random Messages
+const NOT_ALLOWED_MESSAGES: [&'static str; 5] = ["1", "2", "3", "4", "5"];
+
 // Command Locks
 // / Locks the `/poll` command for any role not in the list. If empty, any user can use it.
 
 // Changelog
-const CHANGELOG_MSG: &str = "# Changelog
-## v0.0.6-alpha
-- added the `/poll` command, which allows you to make polls (obviously)
-- added periods to all docstrings (so command descriptions have proper punctuation)
-## v0.0.5a-alpha
-- fixed oversight where moderators could verbal warn moderators, and higher.
-## v0.0.5-alpha
-- moved commands to poise framework (so you can have slash commands as well)
-- verbal warning command
-## v0.0.1-alpha
-- default serenity hello world command added
-- help message added
-- version message added
-- changelog added";
+const CHANGELOG_MSG: &str = "# Current Update (v0.0.6a-alpha)
+- random \"not allowed\" messages";
 
 // fuckin hell i gotta do a rewrite of all my shit
 struct Data {} // User data, which is stored and accessible in all command invocations
@@ -183,6 +174,31 @@ async fn account_age(
     let u = user.as_ref().unwrap_or_else(|| ctx.author());
     let response = format!("{}'s account was created at {}", u.name, u.created_at());
     ctx.say(response).await?;
+    Ok(())
+}
+
+#[poise::command(
+    slash_command,
+    prefix_command,
+    category = "Utility",
+    subcommands("test_error_notallowed"),
+    owners_only,
+    hide_in_help
+)]
+async fn test_random_error(ctx: Context<'_>) -> Result<(), Error> {
+    ctx.say("Select an error to generate.").await?;
+    Ok(())
+}
+
+#[poise::command(
+    slash_command,
+    prefix_command,
+    category = "Utility",
+    owners_only,
+    hide_in_help
+)]
+async fn test_error_notallowed(ctx: Context<'_>) -> Result<(), Error> {
+    ctx.say(random_not_allowed_message()).await?;
     Ok(())
 }
 
@@ -305,8 +321,10 @@ pub async fn help(
 
 // TODO
 fn random_not_allowed_message() -> String {
-    let mut message = "You do not have permission to do that.".to_string();
-    let num = rand::rng().random_range(0..100);
+    let mut message = String::new();
+    let num = rand::rng().random_range(0..NOT_ALLOWED_MESSAGES.len() + 1);
+
+    message = NOT_ALLOWED_MESSAGES[num].to_string();
 
     return message;
 }
@@ -365,7 +383,8 @@ async fn serenity(
                 verbal_warn(),
                 // utility
                 account_age(),
-                poll()
+                test_random_error(),
+                poll(),
             ],
             prefix_options: poise::PrefixFrameworkOptions {
                 prefix: Some(COMMAND_PREFIX.to_string()),
