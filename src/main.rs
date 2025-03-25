@@ -1,6 +1,7 @@
-use ::serenity::all::{EmojiIdentifier, Reaction, ReactionType};
+use ::serenity::all::{
+    EditMessage, EmojiIdentifier, GetMessages, MessageAction, Reaction, ReactionType,
+};
 use anyhow::Context as _;
-use poise;
 use poise::futures_util::TryFutureExt;
 use poise::serenity_prelude as serenity;
 use poise::serenity_prelude::ActivityData;
@@ -11,12 +12,6 @@ use serenity::prelude::*;
 use serenity::utils::MessageBuilder;
 use shuttle_runtime::SecretStore;
 use std::ptr::null;
-/* Projects
-BACKLOG:
-    !: Add poll lock
-PROJ: v0.0.6a-alpha
-    TODO: Add random warn messages
- */
 
 /* Category's:
 , category = "Utility"
@@ -32,7 +27,7 @@ const NAME: &str = "KamFurDev's Utility Bot";
 const COMMAND_PREFIX: &str = ";";
 
 /// The current version of the bot.
-const VERSION: &str = "v0.0.6a-alpha";
+const VERSION: &str = "v0.1.0-alpha";
 
 /// Blocks commands from being sent unless it is sent from the owners. ( default: false )
 const DEVELOPMENT: bool = false;
@@ -48,14 +43,20 @@ const MOD_ROLE: u64 = 1314454674111467602;
 const TRIAL_MOD_ROLE: u64 = 1314454804369510421;
 
 // Random Messages
-const NOT_ALLOWED_MESSAGES: [&'static str; 5] = ["This is not a fucking painting!!! (unallowed action)", "You...shall not...pass! (unallowed action)", "My programmer doesn't want you doing this, so go away until you are allowed to do so!", "No.", "I'm sorry Dave, I'm afraid I can't do that."];
+const NOT_ALLOWED_MESSAGES: [&'static str; 5] = [
+    "This is not a fucking painting!!! (unallowed action)",
+    "You...shall not...pass! (unallowed action)",
+    "My programmer doesn't want you doing this, so go away until you are allowed to do so!",
+    "No.",
+    "I'm sorry Dave, I'm afraid I can't do that.",
+];
 
 // Command Locks
 // / Locks the `/poll` command for any role not in the list. If empty, any user can use it.
 
 // Changelog
-const CHANGELOG_MSG: &str = "# Current Update (v0.0.6a-alpha)
-- random \"not allowed\" messages";
+const CHANGELOG_MSG: &str = "# Current Update (v0.1.0-alpha)
+- Fun: There are two new **Fun** commands, `/give_me_money`, and `/recite_digit_pi`.";
 
 // fuckin hell i gotta do a rewrite of all my shit
 struct Data {} // User data, which is stored and accessible in all command invocations
@@ -259,21 +260,41 @@ async fn verbal_warn(
 
     let logchannel = serenity::ChannelId::new(LOG_CHANNEL);
 
-    logchannel
-        .say(
-            ctx.http(),
-            format!("Sent a verbal warning to {umention}.\nModerator: {moderatorname}\nReason: {msgreason}"),
+    let mut log_message = String::new().to_owned();
+
+    log_message.push_str(
+        format!(
+            "Sent a verbal warning to {umention}.\nModerator: {moderatorname}\nReason: {msgreason}"
         )
-        .await?;
-    u.dm(
-        ctx.http(),
-        CreateMessage::new().content(format!(
+        .as_str(),
+    );
+
+    let mut dm_message = String::new().to_owned();
+
+    dm_message.push_str(format!(
             "{umention}\nThis is a verbal warning! Continued action with have consequences!\nModerator: {moderatorname}\nReason: {msgreason}"
-        )),
-    )
+        ).as_str());
+
+    logchannel.say(ctx.http(), log_message).await?;
+    u.dm(ctx.http(), CreateMessage::new().content(dm_message))
         .await?;
 
     ctx.reply("Done!").await?;
+    Ok(())
+}
+
+// first fun command
+/// Gives you money, totally...
+#[poise::command(slash_command, prefix_command, category = "Fun")]
+async fn give_me_money(ctx: Context<'_>) -> Result<(), Error> {
+    ctx.reply("Sent! Check your bank account.").await?;
+    Ok(())
+}
+
+/// Recites a digit of pi.
+#[poise::command(slash_command, prefix_command, category = "Fun")]
+async fn recite_digit_pi(ctx: Context<'_>) -> Result<(), Error> {
+    ctx.reply("3").await?;
     Ok(())
 }
 
@@ -314,7 +335,6 @@ pub async fn help(
     Ok(())
 }
 
-// TODO
 fn random_not_allowed_message() -> String {
     let mut message = String::new();
     let num = rand::rng().random_range(0..NOT_ALLOWED_MESSAGES.len());
@@ -380,6 +400,9 @@ async fn serenity(
                 account_age(),
                 test_random_error(),
                 poll(),
+                // fun
+                give_me_money(),
+                recite_digit_pi(),
             ],
             prefix_options: poise::PrefixFrameworkOptions {
                 prefix: Some(COMMAND_PREFIX.to_string()),

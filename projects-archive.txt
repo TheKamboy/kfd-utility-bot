@@ -5,3 +5,9 @@ DONEPROJ: Basics
 DONEPROJ: v0.0.5-alpha milestone
     DONE: Verbal Warning Command
     DONE: Finish porting commands to poise
+/* Projects
+BACKLOG:
+    !: Add poll lock
+DONE: v0.0.6a-alpha
+    DONE: Add random warn messages
+ */

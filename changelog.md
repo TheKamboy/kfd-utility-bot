@@ -1,4 +1,6 @@
 # Changelog
+# v0.0.6a-alpha
+- random "not allowed" messages
 ## v0.0.6-alpha
 - added the `/poll` command, which allows you to make polls (obviously)
 - added periods to all docstrings (so command descriptions have proper punctuation)
