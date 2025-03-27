@@ -27,7 +27,7 @@ const NAME: &str = "KamFurDev's Utility Bot";
 const COMMAND_PREFIX: &str = ";";
 
 /// The current version of the bot.
-const VERSION: &str = "v0.1.0-alpha";
+const VERSION: &str = "v0.2.0-alpha";
 
 /// Blocks commands from being sent unless it is sent from the owners. ( default: false )
 const DEVELOPMENT: bool = false;
@@ -55,8 +55,8 @@ const NOT_ALLOWED_MESSAGES: [&'static str; 5] = [
 // / Locks the `/poll` command for any role not in the list. If empty, any user can use it.
 
 // Changelog
-const CHANGELOG_MSG: &str = "# Current Update (v0.1.0-alpha)
-- Fun: There are two new **Fun** commands, `/give_me_money`, and `/recite_digit_pi`.";
+const CHANGELOG_MSG: &str = "# Current Update (v0.2.0-alpha)
+- Polls: You can now add a description to a poll.";
 
 // fuckin hell i gotta do a rewrite of all my shit
 struct Data {} // User data, which is stored and accessible in all command invocations
@@ -68,6 +68,7 @@ type Context<'a> = poise::Context<'a, Data, Error>;
 async fn poll(
     ctx: Context<'_>,
     #[description = "Title"] title: String,
+    #[description = "Description"] description: Option<String>,
     #[description = "Option 1"] option1: String,
     #[description = "Option 2"] option2: String,
     #[description = "Option 3"] option3: Option<String>,
@@ -80,6 +81,7 @@ async fn poll(
     #[description = "Option 10"] option10: Option<String>,
 ) -> Result<(), Error> {
     let emptystring: &String = &String::new();
+    let dec = description.as_ref().unwrap_or_else(|| emptystring);
     let o3 = option3.as_ref().unwrap_or_else(|| emptystring);
     let o4 = option4.as_ref().unwrap_or_else(|| emptystring);
     let o5 = option5.as_ref().unwrap_or_else(|| emptystring);
@@ -91,7 +93,13 @@ async fn poll(
 
     let authorname = &ctx.author().id.to_string();
 
-    let mut message = format!("# {title}\n> Asked by: <@{authorname}>\n\n");
+    let mut message = format!("# {title}\n> Asked by: <@{authorname}>\n");
+    if dec != emptystring {
+        message = format!("{message}> {dec}\n\n");
+    } else {
+        message = format!("{message}\n");
+    }
+
     message = format!("{message}:one: {option1}\n:two: {option2}");
 
     if o3 != "" {
