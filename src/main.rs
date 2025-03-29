@@ -27,7 +27,7 @@ const NAME: &str = "KamFurDev's Utility Bot";
 const COMMAND_PREFIX: &str = ";";
 
 /// The current version of the bot.
-const VERSION: &str = "v0.3.0-alpha";
+const VERSION: &str = "v0.3.1-alpha";
 
 /// Blocks commands from being sent unless it is sent from the owners. ( default: false )
 const DEVELOPMENT: bool = false;
@@ -60,7 +60,8 @@ const NOT_ALLOWED_MESSAGES: [&'static str; 5] = [
 // / Locks the `/poll` command for any role not in the list. If empty, any user can use it.
 
 // Changelog
-const CHANGELOG_MSG: &str = "# Current Update (v0.3.0-alpha)
+const CHANGELOG_MSG: &str = "# Current Update (v0.3.1-alpha)
+- Bug Fix: Fixed Bug where a description for a command option was too long, and caused the bot to fail to start.
 - Bans: Users can now be banned.
 - Appeals: Users can now appeal bans.";
 
@@ -379,7 +380,7 @@ async fn submit_ban_appeal(
     #[description = "When was the ban?"] ban_time: String,
     #[description = "Why did we ban you?"] ban_reason: String,
     #[description = "Why do you want to be unbanned?"] want_unban_reason: String,
-    #[description = "By selecting \"True\", you will have accepted that you will not cause trouble in the server again. If you break these terms once you are unbanned, you might not be able to appeal again."]
+    #[description = "If you select True, you won't cause trouble in the server again."]
     confirm: bool,
 ) -> Result<(), Error> {
     if !check_for_roles(&ctx, &ctx.author(), [BANNED_ROLE].as_ref()).await {
@@ -533,6 +534,8 @@ async fn serenity(
                 changelog(),
                 // moderation
                 verbal_warn(),
+                ban_user(),
+                submit_ban_appeal(),
                 // utility
                 account_age(),
                 test_random_error(),
