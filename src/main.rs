@@ -370,6 +370,8 @@ async fn ban_user(
         .add_member_role(ctx.guild_id().unwrap(), u.id, ban_role, Some(&reason))
         .await?;
 
+    ctx.reply("Done!").await?;
+
     Ok(())
 }
 
