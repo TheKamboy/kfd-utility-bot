@@ -27,7 +27,7 @@ const NAME: &str = "KamFurDev's Utility Bot";
 const COMMAND_PREFIX: &str = ";";
 
 /// The current version of the bot.
-const VERSION: &str = "v0.2.0-alpha";
+const VERSION: &str = "v0.3.0-alpha";
 
 /// Blocks commands from being sent unless it is sent from the owners. ( default: false )
 const DEVELOPMENT: bool = false;
@@ -42,6 +42,11 @@ const HIGHER_MOD_ROLE: u64 = 1320629413154525265; // higher ranked mod
 const MOD_ROLE: u64 = 1314454674111467602;
 const TRIAL_MOD_ROLE: u64 = 1314454804369510421;
 
+// banned stuff
+const BANNED_ROLE: u64 = 1314772212921929818;
+const BANNED_INFO_LINK: &str =
+    "https://discord.com/channels/1229999485854154833/1355646747661041842/1355648740928520384";
+
 // Random Messages
 const NOT_ALLOWED_MESSAGES: [&'static str; 5] = [
     "This is not a fucking painting!!! (unallowed action)",
@@ -55,8 +60,9 @@ const NOT_ALLOWED_MESSAGES: [&'static str; 5] = [
 // / Locks the `/poll` command for any role not in the list. If empty, any user can use it.
 
 // Changelog
-const CHANGELOG_MSG: &str = "# Current Update (v0.2.0-alpha)
-- Polls: You can now add a description to a poll.";
+const CHANGELOG_MSG: &str = "# Current Update (v0.3.0-alpha)
+- Bans: Users can now be banned.
+- Appeals: Users can now appeal bans.";
 
 // fuckin hell i gotta do a rewrite of all my shit
 struct Data {} // User data, which is stored and accessible in all command invocations
@@ -288,6 +294,129 @@ async fn verbal_warn(
         .await?;
 
     ctx.reply("Done!").await?;
+    Ok(())
+}
+
+/// Drops the Ban Role on a user of your choosing.
+#[poise::command(slash_command, prefix_command, category = "Moderation")]
+async fn ban_user(
+    ctx: Context<'_>,
+    #[description = "User"] user: serenity::User,
+    #[description = "Reason"] reason: String,
+) -> Result<(), Error> {
+    if !check_for_roles(
+        &ctx,
+        &ctx.author(),
+        [OWNER_ROLES[0], OWNER_ROLES[1], ADMIN_ROLE, HIGHER_MOD_ROLE].as_ref(),
+    )
+    .await
+    {
+        ctx.reply(random_not_allowed_message()).await?;
+        return Ok(());
+    }
+
+    let u = user;
+
+    if check_for_roles(
+        &ctx,
+        &u,
+        [OWNER_ROLES[0], OWNER_ROLES[1], ADMIN_ROLE].as_ref(),
+    )
+    .await
+        && !check_for_roles(
+            &ctx,
+            ctx.author(),
+            [OWNER_ROLES[0], OWNER_ROLES[1]].as_ref(),
+        )
+        .await
+    {
+        ctx.reply("User is a higher moderator or higher.").await?;
+        return Ok(());
+    }
+
+    if u.id == ctx.author().id {
+        ctx.reply("You can't ban yourself!").await?;
+        return Ok(());
+    }
+
+    let mut umention = "".to_owned();
+    umention.push_str("<@");
+    umention.push_str(&u.id.to_string());
+    umention.push_str(">");
+    let moderatorname = &ctx.author().name;
+
+    let logchannel = serenity::ChannelId::new(LOG_CHANNEL);
+
+    let mut log_message = String::new().to_owned();
+
+    log_message.push_str(
+        format!("Banned {umention}.\nModerator: {moderatorname}\nReason: {reason}").as_str(),
+    );
+
+    let mut dm_message = String::new().to_owned();
+
+    dm_message.push_str(format!(
+            "{umention}\nYou have been banned! For more info, go here: {BANNED_INFO_LINK}\nModerator: {moderatorname}\nReason: {reason}"
+        ).as_str());
+
+    logchannel.say(ctx.http(), log_message).await?;
+    u.dm(ctx.http(), CreateMessage::new().content(dm_message))
+        .await?;
+
+    let ban_role = serenity::RoleId::new(BANNED_ROLE);
+
+    ctx.http()
+        .add_member_role(ctx.guild_id().unwrap(), u.id, ban_role, Some(&reason))
+        .await?;
+
+    Ok(())
+}
+
+/// Submit a ban appeal, if you are banned.
+#[poise::command(slash_command, prefix_command, category = "Moderation")]
+async fn submit_ban_appeal(
+    ctx: Context<'_>,
+    #[description = "When was the ban?"] ban_time: String,
+    #[description = "Why did we ban you?"] ban_reason: String,
+    #[description = "Why do you want to be unbanned?"] want_unban_reason: String,
+    #[description = "By selecting \"True\", you will have accepted that you will not cause trouble in the server again. If you break these terms once you are unbanned, you might not be able to appeal again."]
+    confirm: bool,
+) -> Result<(), Error> {
+    if !check_for_roles(&ctx, &ctx.author(), [BANNED_ROLE].as_ref()).await {
+        ctx.reply(random_not_allowed_message()).await?;
+        return Ok(());
+    }
+
+    let logchannel = serenity::ChannelId::new(LOG_CHANNEL);
+
+    let mut log_message = String::new().to_owned();
+
+    let mut umention = "".to_owned();
+    umention.push_str("<@");
+    umention.push_str(&ctx.author().id.to_string());
+    umention.push_str(">");
+
+    let userid = ctx.author().id;
+
+    let accepted;
+
+    if confirm {
+        accepted = "Yes";
+    } else {
+        accepted = "No";
+    }
+
+    log_message.push_str(
+        format!(
+            "{umention} has submitted a ban appeal!\nUser ID: {userid}\n\nTime of Ban: {ban_time}\n\nBan Reason: {ban_reason}\n\nUnban Reason: {want_unban_reason}\n\nAccepted Terms: {accepted}"
+        )
+        .as_str(),
+    );
+
+    logchannel.say(ctx.http(), log_message).await?;
+
+    ctx.reply("Submitted Ban Appeal.").await?;
+
     Ok(())
 }
 
