@@ -27,7 +27,7 @@ const NAME: &str = "KamFurDev's Utility Bot";
 const COMMAND_PREFIX: &str = ";";
 
 /// The current version of the bot.
-const VERSION: &str = "v0.3.1-alpha";
+const VERSION: &str = "v0.4.0-alpha";
 
 /// Blocks commands from being sent unless it is sent from the owners. ( default: false )
 const DEVELOPMENT: bool = false;
@@ -60,10 +60,8 @@ const NOT_ALLOWED_MESSAGES: [&'static str; 5] = [
 // / Locks the `/poll` command for any role not in the list. If empty, any user can use it.
 
 // Changelog
-const CHANGELOG_MSG: &str = "# Current Update (v0.3.1-alpha)
-- Bug Fix: Fixed Bug where a description for a command option was too long, and caused the bot to fail to start.
-- Bans: Users can now be banned.
-- Appeals: Users can now appeal bans.";
+const CHANGELOG_MSG: &str = "# Current Update (v0.4.0-alpha)
+- Fun: You can now play Rock Paper Scissors with `/rock_paper_scissor`!";
 
 // fuckin hell i gotta do a rewrite of all my shit
 struct Data {} // User data, which is stored and accessible in all command invocations
@@ -438,6 +436,71 @@ async fn recite_digit_pi(ctx: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
+#[derive(Debug, poise::ChoiceParameter, PartialEq)]
+pub enum RockPaperScissors {
+    #[name = "Rock"]
+    ROCK,
+    #[name = "Paper"]
+    PAPER,
+    #[name = "Scissors"]
+    SCISSORS
+}
+
+/// Recites a digit of pi.
+#[poise::command(slash_command, prefix_command, category = "Fun")]
+async fn rock_paper_scissor(
+    ctx: Context<'_>,
+    #[description = "Rock, Paper, or Scissors?"] choice: RockPaperScissors,
+) -> Result<(), Error> {
+    let num = rand::rng().random_range(0..3);
+    let mut bot_choice = "SCISSORS";
+    let mut human_choice = "SCISSORS";
+
+    if choice == RockPaperScissors::ROCK {
+        human_choice = "ROCK"
+    } else if choice == RockPaperScissors::PAPER {
+        human_choice = "PAPER"
+    }
+
+    if num == 0 {
+        bot_choice = "ROCK";
+    } else if num == 1 {
+        bot_choice = "PAPER";
+    }
+
+    // easy fail safe for a tie
+    if bot_choice == human_choice {
+        ctx.reply(format!("We both chose {human_choice}. It's a tie!")).await?;
+        return Ok(());
+    }
+
+    if bot_choice == "ROCK" {
+        if human_choice == "PAPER" {
+            ctx.reply(format!("I chose {bot_choice} and you chose {human_choice}. You win!")).await?;
+            return Ok(());
+        } else {
+            ctx.reply(format!("I chose {bot_choice} and you chose {human_choice}. I win!")).await?;
+            return Ok(());
+        }
+    } else if bot_choice == "PAPER" {
+        if human_choice == "SCISSORS" {
+            ctx.reply(format!("I chose {bot_choice} and you chose {human_choice}. You win!")).await?;
+            return Ok(());
+        } else {
+            ctx.reply(format!("I chose {bot_choice} and you chose {human_choice}. I win!")).await?;
+            return Ok(());
+        }
+    } else {
+        if human_choice == "ROCK" {
+            ctx.reply(format!("I chose {bot_choice} and you chose {human_choice}. You win!")).await?;
+            return Ok(());
+        } else {
+            ctx.reply(format!("I chose {bot_choice} and you chose {human_choice}. I win!")).await?;
+            return Ok(());
+        }
+    }
+}
+
 /// Sends the changelog to your DMs.
 #[poise::command(slash_command, prefix_command, category = "Info")]
 async fn changelog(ctx: Context<'_>) -> Result<(), Error> {
@@ -545,6 +608,7 @@ async fn serenity(
                 // fun
                 give_me_money(),
                 recite_digit_pi(),
+                rock_paper_scissor(),
             ],
             prefix_options: poise::PrefixFrameworkOptions {
                 prefix: Some(COMMAND_PREFIX.to_string()),
