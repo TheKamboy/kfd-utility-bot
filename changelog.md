@@ -1,4 +1,5 @@
 # Changelog
+> changelog is very out dated
 # v0.0.6a-alpha
 - random "not allowed" messages
 ## v0.0.6-alpha
