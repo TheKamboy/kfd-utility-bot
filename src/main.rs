@@ -27,7 +27,7 @@ const NAME: &str = "KamFurDev's Utility Bot";
 const COMMAND_PREFIX: &str = ";";
 
 /// The current version of the bot.
-const VERSION: &str = "v0.4.0-alpha";
+const VERSION: &str = "v0.5.0-alpha";
 
 /// Blocks commands from being sent unless it is sent from the owners. ( default: false )
 const DEVELOPMENT: bool = false;
@@ -44,24 +44,27 @@ const TRIAL_MOD_ROLE: u64 = 1314454804369510421;
 
 // banned stuff
 const BANNED_ROLE: u64 = 1314772212921929818;
+const SUBMIT_BAN_APPEAL_ROLE: u64 = 1360727888399175811;
 const BANNED_INFO_LINK: &str =
     "https://discord.com/channels/1229999485854154833/1355646747661041842/1355648740928520384";
 
 // Random Messages
-const NOT_ALLOWED_MESSAGES: [&'static str; 5] = [
+const NOT_ALLOWED_MESSAGES: [&'static str; 6] = [
     "This is not a fucking painting!!! (unallowed action)",
     "You...shall not...pass! (unallowed action)",
     "My programmer doesn't want you doing this, so go away until you are allowed to do so!",
     "No.",
     "I'm sorry Dave, I'm afraid I can't do that.",
+    "\"bro you havent any power here\"",
 ];
 
 // Command Locks
 // / Locks the `/poll` command for any role not in the list. If empty, any user can use it.
 
 // Changelog
-const CHANGELOG_MSG: &str = "# Current Update (v0.4.0-alpha)
-- Fun: You can now play Rock Paper Scissors with `/rock_paper_scissor`!";
+const CHANGELOG_MSG: &str = "# Current Update (v0.5.0-alpha)
+- Moderation: You can now unban, accept and deny appeals!
+- Error Messages: A new \"action not allowed\" message has been added. It's a server inside joke that just happened (as of writing this).";
 
 // fuckin hell i gotta do a rewrite of all my shit
 struct Data {} // User data, which is stored and accessible in all command invocations
@@ -388,6 +391,12 @@ async fn submit_ban_appeal(
         return Ok(());
     }
 
+    if check_for_roles(&ctx, &ctx.author(), [SUBMIT_BAN_APPEAL_ROLE].as_ref()).await {
+        ctx.reply("You have already sent a ban appeal! Please wait.")
+            .await?;
+        return Ok(());
+    }
+
     let logchannel = serenity::ChannelId::new(LOG_CHANNEL);
 
     let mut log_message = String::new().to_owned();
@@ -414,9 +423,190 @@ async fn submit_ban_appeal(
         .as_str(),
     );
 
+    let ban_role = serenity::RoleId::new(SUBMIT_BAN_APPEAL_ROLE);
+
+    ctx.http()
+        .add_member_role(
+            ctx.guild_id().unwrap(),
+            ctx.author().id,
+            ban_role,
+            Some("User submitted a ban appeal."),
+        )
+        .await?;
+
     logchannel.say(ctx.http(), log_message).await?;
 
     ctx.reply("Submitted Ban Appeal.").await?;
+
+    Ok(())
+}
+
+/// Accepts a ban appeal sent by a banned user.
+#[poise::command(slash_command, prefix_command, category = "Moderation")]
+async fn accept_ban_appeal(
+    ctx: Context<'_>,
+    #[description = "User"] user: serenity::User,
+    #[description = "Reason"] reason: String,
+) -> Result<(), Error> {
+    let ban_role = serenity::RoleId::new(SUBMIT_BAN_APPEAL_ROLE);
+    let ban_role2 = serenity::RoleId::new(BANNED_ROLE);
+
+    ctx.http()
+        .remove_member_role(
+            ctx.guild_id().unwrap(),
+            user.id,
+            ban_role,
+            Some("Appeal action accepted."),
+        )
+        .await?;
+
+    ctx.http()
+        .remove_member_role(
+            ctx.guild_id().unwrap(),
+            user.id,
+            ban_role2,
+            Some(format!("Staff Reason: {reason}").as_str()),
+        )
+        .await?;
+
+    let logchannel = serenity::ChannelId::new(LOG_CHANNEL);
+
+    let mut log_message = String::new().to_owned();
+
+    let mut umention = "".to_owned();
+    umention.push_str("<@");
+    umention.push_str(&user.id.to_string());
+    umention.push_str(">");
+
+    let moderatorname = &ctx.author().name;
+
+    log_message.push_str(
+        format!(
+            "{umention} had their appeal accepted!\nReason: {reason}\nModerator: {moderatorname}"
+        )
+        .as_str(),
+    );
+
+    let mut dm_message = String::new().to_owned();
+
+    dm_message.push_str(
+        format!("Your appeal has been accepted, and you have been unbanned!\nReason: {reason}")
+            .as_str(),
+    );
+
+    let message = CreateMessage::new().content(dm_message);
+
+    logchannel.say(ctx.http(), log_message).await?;
+    user.dm(ctx.http(), message).await?;
+    ctx.reply("Done!").await?;
+
+    Ok(())
+}
+
+/// Denies a ban appeal sent by a banned user.
+#[poise::command(slash_command, prefix_command, category = "Moderation")]
+async fn deny_ban_appeal(
+    ctx: Context<'_>,
+    #[description = "User"] user: serenity::User,
+    #[description = "Reason"] reason: String,
+) -> Result<(), Error> {
+    let ban_role = serenity::RoleId::new(SUBMIT_BAN_APPEAL_ROLE);
+
+    ctx.http()
+        .remove_member_role(
+            ctx.guild_id().unwrap(),
+            user.id,
+            ban_role,
+            Some("Appeal action denied."),
+        )
+        .await?;
+
+    let logchannel = serenity::ChannelId::new(LOG_CHANNEL);
+
+    let mut log_message = String::new().to_owned();
+
+    let mut umention = "".to_owned();
+    umention.push_str("<@");
+    umention.push_str(&user.id.to_string());
+    umention.push_str(">");
+
+    let moderatorname = &ctx.author().name;
+
+    log_message.push_str(
+        format!(
+            "{umention} had their appeal denied!\nReason: {reason}\nModerator: {moderatorname}"
+        )
+        .as_str(),
+    );
+
+    let mut dm_message = String::new().to_owned();
+
+    dm_message.push_str(
+        format!("Your appeal has been denied! You can now re-appeal.\nReason: {reason}").as_str(),
+    );
+
+    let message = CreateMessage::new().content(dm_message);
+
+    logchannel.say(ctx.http(), log_message).await?;
+    user.dm(ctx.http(), message).await?;
+    ctx.reply("Done!").await?;
+
+    Ok(())
+}
+
+/// Unbans a user.
+#[poise::command(slash_command, prefix_command, category = "Moderation")]
+async fn unban_user(
+    ctx: Context<'_>,
+    #[description = "User"] user: serenity::User,
+    #[description = "Reason"] reason: String,
+) -> Result<(), Error> {
+    let ban_role = serenity::RoleId::new(SUBMIT_BAN_APPEAL_ROLE);
+    let ban_role2 = serenity::RoleId::new(BANNED_ROLE);
+
+    ctx.http()
+        .remove_member_role(
+            ctx.guild_id().unwrap(),
+            user.id,
+            ban_role,
+            Some("Staff unban."),
+        )
+        .await?;
+
+    ctx.http()
+        .remove_member_role(
+            ctx.guild_id().unwrap(),
+            user.id,
+            ban_role2,
+            Some(format!("Staff Reason: {reason}").as_str()),
+        )
+        .await?;
+
+    let logchannel = serenity::ChannelId::new(LOG_CHANNEL);
+
+    let mut log_message = String::new().to_owned();
+
+    let mut umention = "".to_owned();
+    umention.push_str("<@");
+    umention.push_str(&user.id.to_string());
+    umention.push_str(">");
+
+    let moderatorname = &ctx.author().name;
+
+    log_message.push_str(
+        format!("{umention} has been unbanned!\nReason: {reason}\nModerator: {moderatorname}")
+            .as_str(),
+    );
+
+    let mut dm_message = String::new().to_owned();
+
+    dm_message.push_str(format!("You have been unbanned!\nReason: {reason}").as_str());
+
+    let message = CreateMessage::new().content(dm_message);
+
+    logchannel.say(ctx.http(), log_message).await?;
+    user.dm(ctx.http(), message).await?;
+    ctx.reply("Done!").await?;
 
     Ok(())
 }
@@ -443,7 +633,7 @@ pub enum RockPaperScissors {
     #[name = "Paper"]
     PAPER,
     #[name = "Scissors"]
-    SCISSORS
+    SCISSORS,
 }
 
 /// Recites a digit of pi.
@@ -470,32 +660,51 @@ async fn rock_paper_scissor(
 
     // easy fail safe for a tie
     if bot_choice == human_choice {
-        ctx.reply(format!("We both chose {human_choice}. It's a tie!")).await?;
+        ctx.reply(format!("We both chose {human_choice}. It's a tie!"))
+            .await?;
         return Ok(());
     }
 
     if bot_choice == "ROCK" {
         if human_choice == "PAPER" {
-            ctx.reply(format!("I chose {bot_choice} and you chose {human_choice}. You win!")).await?;
+            ctx.reply(format!(
+                "I chose {bot_choice} and you chose {human_choice}. You win!"
+            ))
+            .await?;
             return Ok(());
         } else {
-            ctx.reply(format!("I chose {bot_choice} and you chose {human_choice}. I win!")).await?;
+            ctx.reply(format!(
+                "I chose {bot_choice} and you chose {human_choice}. I win!"
+            ))
+            .await?;
             return Ok(());
         }
     } else if bot_choice == "PAPER" {
         if human_choice == "SCISSORS" {
-            ctx.reply(format!("I chose {bot_choice} and you chose {human_choice}. You win!")).await?;
+            ctx.reply(format!(
+                "I chose {bot_choice} and you chose {human_choice}. You win!"
+            ))
+            .await?;
             return Ok(());
         } else {
-            ctx.reply(format!("I chose {bot_choice} and you chose {human_choice}. I win!")).await?;
+            ctx.reply(format!(
+                "I chose {bot_choice} and you chose {human_choice}. I win!"
+            ))
+            .await?;
             return Ok(());
         }
     } else {
         if human_choice == "ROCK" {
-            ctx.reply(format!("I chose {bot_choice} and you chose {human_choice}. You win!")).await?;
+            ctx.reply(format!(
+                "I chose {bot_choice} and you chose {human_choice}. You win!"
+            ))
+            .await?;
             return Ok(());
         } else {
-            ctx.reply(format!("I chose {bot_choice} and you chose {human_choice}. I win!")).await?;
+            ctx.reply(format!(
+                "I chose {bot_choice} and you chose {human_choice}. I win!"
+            ))
+            .await?;
             return Ok(());
         }
     }
@@ -600,7 +809,10 @@ async fn serenity(
                 // moderation
                 verbal_warn(),
                 ban_user(),
+                unban_user(),
                 submit_ban_appeal(),
+                accept_ban_appeal(),
+                deny_ban_appeal(),
                 // utility
                 account_age(),
                 test_random_error(),
