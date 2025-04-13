@@ -27,7 +27,7 @@ const NAME: &str = "KamFurDev's Utility Bot";
 const COMMAND_PREFIX: &str = ";";
 
 /// The current version of the bot.
-const VERSION: &str = "v0.5.0-alpha";
+const VERSION: &str = "v0.5.1-alpha";
 
 /// Blocks commands from being sent unless it is sent from the owners. ( default: false )
 const DEVELOPMENT: bool = false;
@@ -62,7 +62,8 @@ const NOT_ALLOWED_MESSAGES: [&'static str; 6] = [
 // / Locks the `/poll` command for any role not in the list. If empty, any user can use it.
 
 // Changelog
-const CHANGELOG_MSG: &str = "# Current Update (v0.5.0-alpha)
+const CHANGELOG_MSG: &str = "# Current Update (v0.5.1-alpha)
+- Quick Fix: Fixed accepting and denying appeals not checking user ranking.
 - Moderation: You can now unban, accept and deny appeals!
 - Error Messages: A new \"action not allowed\" message has been added. It's a server inside joke that just happened (as of writing this).";
 
@@ -448,6 +449,17 @@ async fn accept_ban_appeal(
     #[description = "User"] user: serenity::User,
     #[description = "Reason"] reason: String,
 ) -> Result<(), Error> {
+    if !check_for_roles(
+        &ctx,
+        &ctx.author(),
+        [OWNER_ROLES[0], OWNER_ROLES[1], ADMIN_ROLE, HIGHER_MOD_ROLE].as_ref(),
+    )
+    .await
+    {
+        ctx.reply(random_not_allowed_message()).await?;
+        return Ok(());
+    }
+
     let ban_role = serenity::RoleId::new(SUBMIT_BAN_APPEAL_ROLE);
     let ban_role2 = serenity::RoleId::new(BANNED_ROLE);
 
@@ -510,6 +522,17 @@ async fn deny_ban_appeal(
     #[description = "User"] user: serenity::User,
     #[description = "Reason"] reason: String,
 ) -> Result<(), Error> {
+    if !check_for_roles(
+        &ctx,
+        &ctx.author(),
+        [OWNER_ROLES[0], OWNER_ROLES[1], ADMIN_ROLE, HIGHER_MOD_ROLE].as_ref(),
+    )
+    .await
+    {
+        ctx.reply(random_not_allowed_message()).await?;
+        return Ok(());
+    }
+
     let ban_role = serenity::RoleId::new(SUBMIT_BAN_APPEAL_ROLE);
 
     ctx.http()
@@ -561,6 +584,16 @@ async fn unban_user(
     #[description = "User"] user: serenity::User,
     #[description = "Reason"] reason: String,
 ) -> Result<(), Error> {
+    if !check_for_roles(
+        &ctx,
+        &ctx.author(),
+        [OWNER_ROLES[0], OWNER_ROLES[1], ADMIN_ROLE, HIGHER_MOD_ROLE].as_ref(),
+    )
+    .await
+    {
+        ctx.reply(random_not_allowed_message()).await?;
+        return Ok(());
+    }
     let ban_role = serenity::RoleId::new(SUBMIT_BAN_APPEAL_ROLE);
     let ban_role2 = serenity::RoleId::new(BANNED_ROLE);
 
