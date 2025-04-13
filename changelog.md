@@ -1,5 +1,8 @@
 # Changelog
 
+>[!NOTE]
+> This may not always be up to date!
+
 ## v0.5.1-alpha
 
 - Quick Fix: Fixed accepting and denying appeals not checking user power.
