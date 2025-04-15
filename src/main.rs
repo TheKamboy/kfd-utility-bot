@@ -1,17 +1,11 @@
-use ::serenity::all::{
-    EditMessage, EmojiIdentifier, GetMessages, MessageAction, Reaction, ReactionType,
-};
+use ::serenity::all::ReactionType;
 use anyhow::Context as _;
-use poise::futures_util::TryFutureExt;
 use poise::serenity_prelude as serenity;
 use poise::serenity_prelude::ActivityData;
 use rand::Rng;
 use serenity::all::{CreateMessage, User};
-use serenity::model::id::UserId;
 use serenity::prelude::*;
-use serenity::utils::MessageBuilder;
 use shuttle_runtime::SecretStore;
-use std::ptr::null;
 
 /* Category's:
 , category = "Utility"
