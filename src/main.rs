@@ -26,6 +26,12 @@ const VERSION: &str = "v0.5.1-alpha";
 /// Blocks commands from being sent unless it is sent from the owners. ( default: false )
 const DEVELOPMENT: bool = false;
 
+// Changelog
+const CHANGELOG_MSG: &str = "# Current Update (v0.5.1-alpha)
+- Quick Fix: Fixed accepting and denying appeals not checking user ranking.
+- Moderation: You can now unban, accept and deny appeals!
+- Error Messages: A new \"action not allowed\" message has been added. It's a server inside joke that just happened (as of writing this).";
+
 // Channels
 const LOG_CHANNEL: u64 = 1314766735030747218;
 
@@ -54,12 +60,6 @@ const NOT_ALLOWED_MESSAGES: [&'static str; 6] = [
 
 // Command Locks
 // / Locks the `/poll` command for any role not in the list. If empty, any user can use it.
-
-// Changelog
-const CHANGELOG_MSG: &str = "# Current Update (v0.5.1-alpha)
-- Quick Fix: Fixed accepting and denying appeals not checking user ranking.
-- Moderation: You can now unban, accept and deny appeals!
-- Error Messages: A new \"action not allowed\" message has been added. It's a server inside joke that just happened (as of writing this).";
 
 // fuckin hell i gotta do a rewrite of all my shit
 struct Data {} // User data, which is stored and accessible in all command invocations
