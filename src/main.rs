@@ -49,7 +49,7 @@ const BANNED_INFO_LINK: &str =
     "https://discord.com/channels/1229999485854154833/1355646747661041842/1355648740928520384";
 
 // Random Messages
-const NOT_ALLOWED_MESSAGES: [&'static str; 6] = [
+const NOT_ALLOWED_MESSAGES: [&str; 6] = [
     "This is not a fucking painting!!! (unallowed action)",
     "You...shall not...pass! (unallowed action)",
     "My programmer doesn't want you doing this, so go away until you are allowed to do so!",
@@ -67,6 +67,7 @@ type Error = Box<dyn std::error::Error + Send + Sync>;
 type Context<'a> = poise::Context<'a, Data, Error>;
 
 /// Creates a poll for users to vote on.
+#[allow(clippy::too_many_arguments)]
 #[poise::command(slash_command, prefix_command, category = "Utility")]
 async fn poll(
     ctx: Context<'_>,
@@ -84,15 +85,15 @@ async fn poll(
     #[description = "Option 10"] option10: Option<String>,
 ) -> Result<(), Error> {
     let emptystring: &String = &String::new();
-    let dec = description.as_ref().unwrap_or_else(|| emptystring);
-    let o3 = option3.as_ref().unwrap_or_else(|| emptystring);
-    let o4 = option4.as_ref().unwrap_or_else(|| emptystring);
-    let o5 = option5.as_ref().unwrap_or_else(|| emptystring);
-    let o6 = option6.as_ref().unwrap_or_else(|| emptystring);
-    let o7 = option7.as_ref().unwrap_or_else(|| emptystring);
-    let o8 = option8.as_ref().unwrap_or_else(|| emptystring);
-    let o9 = option9.as_ref().unwrap_or_else(|| emptystring);
-    let o0 = option10.as_ref().unwrap_or_else(|| emptystring);
+    let dec = description.as_ref().unwrap_or(emptystring);
+    let o3 = option3.as_ref().unwrap_or(emptystring);
+    let o4 = option4.as_ref().unwrap_or(emptystring);
+    let o5 = option5.as_ref().unwrap_or(emptystring);
+    let o6 = option6.as_ref().unwrap_or(emptystring);
+    let o7 = option7.as_ref().unwrap_or(emptystring);
+    let o8 = option8.as_ref().unwrap_or(emptystring);
+    let o9 = option9.as_ref().unwrap_or(emptystring);
+    let o0 = option10.as_ref().unwrap_or(emptystring);
 
     let authorname = &ctx.author().id.to_string();
 
@@ -105,28 +106,28 @@ async fn poll(
 
     message = format!("{message}:one: {option1}\n:two: {option2}");
 
-    if o3 != "" {
+    if !o3.is_empty() {
         message = format!("{message}\n:three: {o3}");
     }
-    if o4 != "" {
+    if !o4.is_empty() {
         message = format!("{message}\n:four: {o4}");
     }
-    if o5 != "" {
+    if !o5.is_empty() {
         message = format!("{message}\n:five: {o5}");
     }
-    if o6 != "" {
+    if !o6.is_empty() {
         message = format!("{message}\n:six: {o6}");
     }
-    if o7 != "" {
+    if !o7.is_empty() {
         message = format!("{message}\n:seven: {o7}");
     }
-    if o8 != "" {
+    if !o8.is_empty() {
         message = format!("{message}\n:eight: {o8}");
     }
-    if o9 != "" {
+    if !o9.is_empty() {
         message = format!("{message}\n:nine: {o9}");
     }
-    if o0 != "" {
+    if !o0.is_empty() {
         message = format!("{message}\n:keycap_ten: {o0}");
     }
 
@@ -136,35 +137,35 @@ async fn poll(
     msg.react(ctx.http(), ReactionType::Unicode("2️⃣".to_string()))
         .await?;
 
-    if o3 != "" {
+    if !o3.is_empty() {
         msg.react(ctx.http(), ReactionType::Unicode("3️⃣".to_string()))
             .await?;
     }
-    if o4 != "" {
+    if !o4.is_empty() {
         msg.react(ctx.http(), ReactionType::Unicode("4️⃣".to_string()))
             .await?;
     }
-    if o5 != "" {
+    if !o5.is_empty() {
         msg.react(ctx.http(), ReactionType::Unicode("5️⃣".to_string()))
             .await?;
     }
-    if o6 != "" {
+    if !o6.is_empty() {
         msg.react(ctx.http(), ReactionType::Unicode("6️⃣".to_string()))
             .await?;
     }
-    if o7 != "" {
+    if !o7.is_empty() {
         msg.react(ctx.http(), ReactionType::Unicode("7️⃣".to_string()))
             .await?;
     }
-    if o8 != "" {
+    if !o8.is_empty() {
         msg.react(ctx.http(), ReactionType::Unicode("8️⃣".to_string()))
             .await?;
     }
-    if o9 != "" {
+    if !o9.is_empty() {
         msg.react(ctx.http(), ReactionType::Unicode("9️⃣".to_string()))
             .await?;
     }
-    if o0 != "" {
+    if !o0.is_empty() {
         msg.react(ctx.http(), ReactionType::Unicode("🔟".to_string()))
             .await?;
     }
@@ -218,7 +219,7 @@ async fn verbal_warn(
 ) -> Result<(), Error> {
     if !check_for_roles(
         &ctx,
-        &ctx.author(),
+        ctx.author(),
         [
             OWNER_ROLES[0],
             OWNER_ROLES[1],
@@ -265,7 +266,7 @@ async fn verbal_warn(
     let mut umention = "".to_owned();
     umention.push_str("<@");
     umention.push_str(&u.id.to_string());
-    umention.push_str(">");
+    umention.push('>');
     let moderatorname = &ctx.author().name;
     let msgreason = reason;
 
@@ -303,7 +304,7 @@ async fn ban_user(
 ) -> Result<(), Error> {
     if !check_for_roles(
         &ctx,
-        &ctx.author(),
+        ctx.author(),
         [OWNER_ROLES[0], OWNER_ROLES[1], ADMIN_ROLE, HIGHER_MOD_ROLE].as_ref(),
     )
     .await
@@ -339,7 +340,7 @@ async fn ban_user(
     let mut umention = "".to_owned();
     umention.push_str("<@");
     umention.push_str(&u.id.to_string());
-    umention.push_str(">");
+    umention.push('>');
     let moderatorname = &ctx.author().name;
 
     let logchannel = serenity::ChannelId::new(LOG_CHANNEL);
@@ -381,12 +382,12 @@ async fn submit_ban_appeal(
     #[description = "If you select True, you won't cause trouble in the server again."]
     confirm: bool,
 ) -> Result<(), Error> {
-    if !check_for_roles(&ctx, &ctx.author(), [BANNED_ROLE].as_ref()).await {
+    if !check_for_roles(&ctx, ctx.author(), [BANNED_ROLE].as_ref()).await {
         ctx.reply(random_not_allowed_message()).await?;
         return Ok(());
     }
 
-    if check_for_roles(&ctx, &ctx.author(), [SUBMIT_BAN_APPEAL_ROLE].as_ref()).await {
+    if check_for_roles(&ctx, ctx.author(), [SUBMIT_BAN_APPEAL_ROLE].as_ref()).await {
         ctx.reply("You have already sent a ban appeal! Please wait.")
             .await?;
         return Ok(());
@@ -399,17 +400,11 @@ async fn submit_ban_appeal(
     let mut umention = "".to_owned();
     umention.push_str("<@");
     umention.push_str(&ctx.author().id.to_string());
-    umention.push_str(">");
+    umention.push('>');
 
     let userid = ctx.author().id;
 
-    let accepted;
-
-    if confirm {
-        accepted = "Yes";
-    } else {
-        accepted = "No";
-    }
+    let accepted = if confirm { "Yes" } else { "No" };
 
     log_message.push_str(
         format!(
@@ -445,7 +440,7 @@ async fn accept_ban_appeal(
 ) -> Result<(), Error> {
     if !check_for_roles(
         &ctx,
-        &ctx.author(),
+        ctx.author(),
         [OWNER_ROLES[0], OWNER_ROLES[1], ADMIN_ROLE, HIGHER_MOD_ROLE].as_ref(),
     )
     .await
@@ -482,7 +477,7 @@ async fn accept_ban_appeal(
     let mut umention = "".to_owned();
     umention.push_str("<@");
     umention.push_str(&user.id.to_string());
-    umention.push_str(">");
+    umention.push('>');
 
     let moderatorname = &ctx.author().name;
 
@@ -518,7 +513,7 @@ async fn deny_ban_appeal(
 ) -> Result<(), Error> {
     if !check_for_roles(
         &ctx,
-        &ctx.author(),
+        ctx.author(),
         [OWNER_ROLES[0], OWNER_ROLES[1], ADMIN_ROLE, HIGHER_MOD_ROLE].as_ref(),
     )
     .await
@@ -545,7 +540,7 @@ async fn deny_ban_appeal(
     let mut umention = "".to_owned();
     umention.push_str("<@");
     umention.push_str(&user.id.to_string());
-    umention.push_str(">");
+    umention.push('>');
 
     let moderatorname = &ctx.author().name;
 
@@ -580,7 +575,7 @@ async fn unban_user(
 ) -> Result<(), Error> {
     if !check_for_roles(
         &ctx,
-        &ctx.author(),
+        ctx.author(),
         [OWNER_ROLES[0], OWNER_ROLES[1], ADMIN_ROLE, HIGHER_MOD_ROLE].as_ref(),
     )
     .await
@@ -616,7 +611,7 @@ async fn unban_user(
     let mut umention = "".to_owned();
     umention.push_str("<@");
     umention.push_str(&user.id.to_string());
-    umention.push_str(">");
+    umention.push('>');
 
     let moderatorname = &ctx.author().name;
 
@@ -698,13 +693,13 @@ async fn rock_paper_scissor(
                 "I chose {bot_choice} and you chose {human_choice}. You win!"
             ))
             .await?;
-            return Ok(());
+            Ok(())
         } else {
             ctx.reply(format!(
                 "I chose {bot_choice} and you chose {human_choice}. I win!"
             ))
             .await?;
-            return Ok(());
+            Ok(())
         }
     } else if bot_choice == "PAPER" {
         if human_choice == "SCISSORS" {
@@ -712,28 +707,26 @@ async fn rock_paper_scissor(
                 "I chose {bot_choice} and you chose {human_choice}. You win!"
             ))
             .await?;
-            return Ok(());
+            Ok(())
         } else {
             ctx.reply(format!(
                 "I chose {bot_choice} and you chose {human_choice}. I win!"
             ))
             .await?;
-            return Ok(());
+            Ok(())
         }
+    } else if human_choice == "ROCK" {
+        ctx.reply(format!(
+            "I chose {bot_choice} and you chose {human_choice}. You win!"
+        ))
+        .await?;
+        Ok(())
     } else {
-        if human_choice == "ROCK" {
-            ctx.reply(format!(
-                "I chose {bot_choice} and you chose {human_choice}. You win!"
-            ))
-            .await?;
-            return Ok(());
-        } else {
-            ctx.reply(format!(
-                "I chose {bot_choice} and you chose {human_choice}. I win!"
-            ))
-            .await?;
-            return Ok(());
-        }
+        ctx.reply(format!(
+            "I chose {bot_choice} and you chose {human_choice}. I win!"
+        ))
+        .await?;
+        Ok(())
     }
 }
 
@@ -775,12 +768,12 @@ pub async fn help(
 }
 
 fn random_not_allowed_message() -> String {
-    let mut message = String::new();
+    let mut _message = String::new();
     let num = rand::rng().random_range(0..NOT_ALLOWED_MESSAGES.len());
 
-    message = NOT_ALLOWED_MESSAGES[num].to_string();
+    _message = NOT_ALLOWED_MESSAGES[num].to_string();
 
-    return message;
+    _message
 }
 
 async fn on_error(error: poise::FrameworkError<'_, Data, Error>) {
@@ -811,7 +804,7 @@ async fn check_for_roles(ctx: &Context<'_>, user: &User, roles: &[u64]) -> bool 
         }
     }
 
-    return false;
+    false
 }
 
 #[shuttle_runtime::main]
