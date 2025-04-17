@@ -3,10 +3,10 @@
 The Discord bot I use in my discord server!
 
 <!-- markdownlint-disable MD033 -->
-<a href="#usage"><kbd> <br> Usage <br> </kbd></a>&ensp;&ensp;
-<a href="#features"><kbd> <br> Features <br> </kbd></a>&ensp;&ensp;
-<a href="#configuration"><kbd> <br> Configuration <br> </kbd></a>&ensp;&ensp;
-<a href="todo"><kbd> <br> Wiki <br> </kbd></a>&ensp;&ensp;
+<a href="#usage"><kbd><br>Usage<br></kbd></a>&ensp;&ensp;
+<a href="#features"><kbd><br>Features<br></kbd></a>&ensp;&ensp;
+<a href="#configuration"><kbd><br>Configuration<br></kbd></a>&ensp;&ensp;
+<a href="todo"><kbd><br>Wiki<br></kbd></a>&ensp;&ensp;
 <!-- markdownlint-enable MD033 -->
 
 ## Usage
