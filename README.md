@@ -2,12 +2,12 @@
 
 The Discord bot I use in my discord server!
 
-<!--toc:start-->
-- [KamFurDev's Utility Bot](#kamfurdevs-utility-bot)
-  - [Usage](#usage)
-  - [Features](#features)
-  - [Configuration](#configuration)
-<!--toc:end-->
+<!-- markdownlint-disable MD033 -->
+<a href="#usage"><kbd> <br> Usage <br> </kbd></a>&ensp;&ensp;
+<a href="#features"><kbd> <br> Features <br> </kbd></a>&ensp;&ensp;
+<a href="#configuration"><kbd> <br> Configuration <br> </kbd></a>&ensp;&ensp;
+<a href="todo"><kbd> <br> Wiki <br> </kbd></a>&ensp;&ensp;
+<!-- markdownlint-enable MD033 -->
 
 ## Usage
 
