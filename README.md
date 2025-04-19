@@ -16,7 +16,7 @@ You will need the following:
 - `cargo` (required): Rust Package Manager.
 - `shuttle` (required): For bot running/hosting.
 
-Clone the repository: `git clone https://github.com/TheKamboy/[placeholder]`
+Clone the repository: `git clone https://github.com/TheKamboy/kfd-utility-bot`
 
 Next, you need to make a `Secrets.toml` file in the root of the repository.
 
