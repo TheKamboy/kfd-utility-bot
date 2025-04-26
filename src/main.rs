@@ -14,7 +14,8 @@ use shuttle_runtime::SecretStore;
 */
 
 // Bot Settings
-/// The name you want to give the bot. ( default: KamFurDev's Utility Bot )
+
+/// The name you want to give the bot. ( default: `KamFurDev's Utility Bot` )
 const NAME: &str = "KamFurDev's Utility Bot";
 
 /// The prefix for text commands. ( default: ; )
@@ -50,8 +51,8 @@ const BANNED_INFO_LINK: &str =
 
 // Random Messages
 const NOT_ALLOWED_MESSAGES: [&str; 6] = [
-    "This is not a fucking painting!!! (unallowed action)",
-    "You...shall not...pass! (unallowed action)",
+    "This is not a fucking painting!!!",
+    "You...shall not...pass!",
     "My programmer doesn't want you doing this, so go away until you are allowed to do so!",
     "No.",
     "I'm sorry Dave, I'm afraid I can't do that.",
