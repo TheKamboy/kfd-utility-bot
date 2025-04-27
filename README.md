@@ -6,7 +6,7 @@ The Discord bot I use in my discord server!
 <a href="#usage"><kbd><br>Usage<br></kbd></a>&ensp;&ensp;
 <a href="#features"><kbd><br>Features<br></kbd></a>&ensp;&ensp;
 <a href="#configuration"><kbd><br>Configuration<br></kbd></a>&ensp;&ensp;
-<a href="todo"><kbd><br>Wiki<br></kbd></a>&ensp;&ensp;
+<a href="https://github.com/TheKamboy/kfd-utility-bot/wiki"><kbd><br>Wiki<br></kbd></a>&ensp;&ensp;
 <!-- markdownlint-enable MD033 -->
 
 ## Usage
