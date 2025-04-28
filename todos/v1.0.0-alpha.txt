@@ -1,0 +1,4 @@
+2025-04-27 Mark this done if work on this version has started
+2025-04-27 +v1.0.0-alpha @major release
+2025-04-27 Use Secrets.toml as @config file +v1.0.0-alpha
+2025-04-27 get_config_option() function +v1.0.0-alpha
