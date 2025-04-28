@@ -6,6 +6,7 @@ The Discord bot I use in my discord server!
 <a href="#usage"><kbd><br>Usage<br></kbd></a>&ensp;&ensp;
 <a href="#features"><kbd><br>Features<br></kbd></a>&ensp;&ensp;
 <a href="#configuration"><kbd><br>Configuration<br></kbd></a>&ensp;&ensp;
+<a href="#todos"><kbd><br>TODOs<br></kbd></a>&ensp;&ensp;
 <a href="https://github.com/TheKamboy/kfd-utility-bot/wiki"><kbd><br>Wiki<br></kbd></a>&ensp;&ensp;
 <!-- <a href="https://github.com/TheKamboy/kfd-utility-bot/blob/master/todo.txt"><kbd><br>Todo.txt<br></kbd></a>&ensp;&ensp; -->
 <!-- markdownlint-enable MD033 -->
@@ -78,3 +79,7 @@ Once that is done, you can run the bot using `shuttle run`
 - Other
   - `NOT_ALLOWED_MESSAGES: [&'static str; 6]`:
   Random messages for when the user runs a command that they aren't allowed to run.
+
+## TODOs
+
+You can find TODOs in the [todos folder](https://github.com/TheKamboy/kfd-utility-bot/tree/master/todos).
