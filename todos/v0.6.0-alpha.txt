@@ -1,4 +1,4 @@
-2025-04-27 +v0.6.0-alpha release @minor
-2025-04-27 timeout command @moderation
+(A) 2025-04-27 +v0.6.0-alpha release @minor
+2025-04-27 timeout and remove timeout command @moderation
 2025-04-27 final warning command @moderation note:final-warning-command-note
 2025-04-27 remove final warning command @moderation
