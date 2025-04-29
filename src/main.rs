@@ -211,6 +211,10 @@ async fn test_error_notallowed(ctx: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
+// Sends a verbal warning to the user specified, with a reason.
+// #[poise::command(slash_command, prefix_command, category = "Moderation")]
+// async fn timeout() {}
+
 /// Sends a verbal warning to the user specified, with a reason.
 #[poise::command(slash_command, prefix_command, category = "Moderation")]
 async fn verbal_warn(
